@@ -1,6 +1,6 @@
 import { FileText, Download, Printer } from 'lucide-react'
 import { Button } from './Button'
-import { generateSystemReport, downloadDocument, downloadPDF, printDocument } from '../lib/reportGenerator'
+import { generateSystemReport, downloadDocument, downloadPDF, printDocument } from '../../lib/reportGenerator'
 
 export function SystemReportActions({ users = [], loans = [] }) {
   function handlePrintSystemReport() {

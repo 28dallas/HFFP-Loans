@@ -1,6 +1,6 @@
 import { FileText, Download, Printer } from 'lucide-react'
 import { Button } from './Button'
-import { generateMemberCVC, generateMemberReport, downloadDocument, downloadPDF, printDocument } from '../lib/reportGenerator'
+import { generateMemberCVC, generateMemberReport, downloadDocument, downloadPDF, printDocument } from '../../lib/reportGenerator'
 
 export function ReportActions({ user, loans, variant = 'default' }) {
   function handlePrintCVC() {
