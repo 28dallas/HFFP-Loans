@@ -12,6 +12,7 @@ import { EditUserModal } from '../components/users/EditUserModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Button } from '../components/ui/Button'
 import { PageSpinner } from '../components/ui/Spinner'
+import { ReportActions } from '../components/ui/ReportActions'
 
 function StatCard({ label, value, color = 'text-text' }) {
   return (
@@ -107,13 +108,18 @@ export default function UserDetail() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 mb-6">
                 <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)} className="w-full justify-center gap-2">
                   <Pencil size={13} /> Edit Member
                 </Button>
                 <Button variant="danger" size="sm" onClick={() => setDeleteUserOpen(true)} className="w-full justify-center gap-2">
                   <Trash2 size={13} /> Delete Member
                 </Button>
+              </div>
+
+              {/* Report Actions */}
+              <div className="border-t border-slate-100 pt-4">
+                <ReportActions user={user} loans={loans} variant="compact" />
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { AddUserModal } from '../components/users/AddUserModal'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { Button } from '../components/ui/Button'
 import { PageSpinner } from '../components/ui/Spinner'
+import { SystemReportActions } from '../components/ui/SystemReportActions'
 
 const FILTERS = ['All', 'Active', 'Overdue', 'Paid']
 
@@ -122,7 +123,7 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
@@ -137,6 +138,7 @@ export default function Dashboard() {
             <Plus size={15} />
             Add Member
           </Button>
+          <SystemReportActions users={users} loans={loans} />
         </div>
       </div>
 
