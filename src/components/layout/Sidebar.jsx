@@ -7,7 +7,12 @@ const navItems = [
   { to: '/members', icon: Users, label: 'Members' },
 ]
 
-export function Sidebar({ open = false, onClose = () => {} }) {
+export function Sidebar({
+  open = false,
+  desktopOpen = false,
+  onClose = () => {},
+  onDesktopOpenChange = () => {},
+}) {
   const navigate = useNavigate()
 
   async function handleLogout() {
@@ -21,12 +26,18 @@ export function Sidebar({ open = false, onClose = () => {} }) {
         className={`fixed inset-0 bg-slate-950/40 z-30 transition-opacity duration-200 lg:hidden ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
-      <aside className={`fixed left-0 top-0 h-screen w-60 bg-primary flex flex-col z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside
+        className={`fixed left-0 top-0 h-screen w-60 bg-primary flex flex-col z-40 transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+          ${desktopOpen ? 'lg:translate-x-0' : 'lg:-translate-x-[11rem]'}`}
+        onMouseEnter={() => onDesktopOpenChange(true)}
+        onMouseLeave={() => onDesktopOpenChange(false)}
+      >
         <div className="flex items-center justify-between gap-2.5 px-5 py-5 border-b border-white/10 lg:justify-start">
           <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
             <Landmark size={16} className="text-white" />
           </div>
-          <div className="hidden lg:block">
+          <div className={`${desktopOpen ? 'lg:block' : 'lg:hidden'} hidden`}>
             <p className="text-white font-semibold text-sm leading-tight">HFFP</p>
             <p className="text-white/50 text-xs">Loan Management</p>
           </div>
@@ -46,7 +57,8 @@ export function Sidebar({ open = false, onClose = () => {} }) {
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+                `flex items-center rounded-lg text-sm font-medium transition-all duration-150
+                ${desktopOpen ? 'justify-start gap-3 px-3 py-2.5' : 'justify-end px-3 py-2.5 lg:pr-4'}
                 ${isActive
                   ? 'bg-white/15 text-white'
                   : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -55,7 +67,9 @@ export function Sidebar({ open = false, onClose = () => {} }) {
               onClick={onClose}
             >
               <Icon size={17} />
-              {label}
+              <span className={`${desktopOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-150`}>
+                {label}
+              </span>
             </NavLink>
           ))}
         </nav>
@@ -63,10 +77,13 @@ export function Sidebar({ open = false, onClose = () => {} }) {
         <div className="px-3 py-4 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all duration-150"
+            className={`flex items-center w-full rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all duration-150
+              ${desktopOpen ? 'justify-start gap-3 px-3 py-2.5' : 'justify-end px-3 py-2.5 lg:pr-4'}`}
           >
             <LogOut size={17} />
-            Sign Out
+            <span className={`${desktopOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-150`}>
+              Sign Out
+            </span>
           </button>
         </div>
       </aside>

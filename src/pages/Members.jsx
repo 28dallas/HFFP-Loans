@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion as Motion } from 'framer-motion'
 import { Search, Plus, Users, MapPin, TrendingUp } from 'lucide-react'
 import { useUsers } from '../hooks/useUsers'
 import { useLoans } from '../hooks/useLoans'
@@ -20,6 +20,21 @@ const GROUND_COLORS = {
 
 function groundColor(ground) {
   return GROUND_COLORS[ground] ?? 'bg-slate-50 text-slate-600 border-slate-200'
+}
+
+function compareMembers(a, b, loanMap) {
+  const aOutstanding = loanMap[a.id]?.outstanding ?? 0
+  const bOutstanding = loanMap[b.id]?.outstanding ?? 0
+  const aShares = Number(a.total_shares ?? 0)
+  const bShares = Number(b.total_shares ?? 0)
+
+  const aPriority = aShares > 0 && aOutstanding > 0 ? 1 : 0
+  const bPriority = bShares > 0 && bOutstanding > 0 ? 1 : 0
+
+  if (aPriority !== bPriority) return bPriority - aPriority
+  if (aOutstanding !== bOutstanding) return bOutstanding - aOutstanding
+  if (aShares !== bShares) return bShares - aShares
+  return a.full_name.localeCompare(b.full_name)
 }
 
 export default function Members() {
@@ -58,15 +73,15 @@ export default function Members() {
           u.ground?.toLowerCase().includes(q)
       )
     }
-    return result
-  }, [users, activeGround, search])
+    return [...result].sort((a, b) => compareMembers(a, b, loanMap))
+  }, [users, activeGround, search, loanMap])
 
   const totalShares = filtered.reduce((s, u) => s + Number(u.total_shares ?? 0), 0)
   const totalOutstanding = filtered.reduce((s, u) => s + (loanMap[u.id]?.outstanding ?? 0), 0)
 
   return (
     <PageWrapper>
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
@@ -99,7 +114,7 @@ export default function Members() {
             </div>
             <div>
               <p className="text-xs text-muted">Total Shares</p>
-              <p className="text-xl font-bold text-text font-mono">KES 80,000.00</p>
+              <p className="text-xl font-bold text-text font-mono">{formatCurrency(totalShares)}</p>
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 p-4 flex items-center gap-3">
@@ -162,7 +177,7 @@ export default function Members() {
                   {filtered.map((user, i) => {
                     const outstanding = loanMap[user.id]?.outstanding ?? 0
                     return (
-                      <motion.tr
+                      <Motion.tr
                         key={user.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -205,7 +220,7 @@ export default function Members() {
                             {formatCurrency(outstanding)}
                           </span>
                         </td>
-                      </motion.tr>
+                      </Motion.tr>
                     )
                   })}
                 </tbody>
@@ -217,7 +232,7 @@ export default function Members() {
                         Total ({filtered.length} members)
                       </td>
                       <td className="px-4 py-3 text-xs font-bold font-mono text-success whitespace-nowrap">
-                        KES 80,000.00
+                        {formatCurrency(totalShares)}
                       </td>
                       <td className="px-4 py-3 text-xs font-bold font-mono text-danger whitespace-nowrap">
                         {formatCurrency(totalOutstanding)}
@@ -235,7 +250,7 @@ export default function Members() {
             )}
           </div>
         )}
-      </motion.div>
+      </Motion.div>
 
       <AddUserModal open={addOpen} onClose={() => setAddOpen(false)} />
     </PageWrapper>

@@ -64,7 +64,10 @@ export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: createUser,
-    onSuccess: () => qc.invalidateQueries({ queryKey: USERS_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: USERS_KEY })
+      qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
+    },
   })
 }
 
@@ -83,7 +86,10 @@ export function useDeleteUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => qc.invalidateQueries({ queryKey: USERS_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: USERS_KEY })
+      qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
+    },
   })
 }
 

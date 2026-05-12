@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus } from 'lucide-react'
+import { motion as Motion } from 'framer-motion'
+import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus, BadgeCheck, PiggyBank, Wallet, Calculator } from 'lucide-react'
 import { useUser, useDeleteUser } from '../hooks/useUsers'
 import { useUserLoans, useDeleteLoan } from '../hooks/useLoans'
-import { getInitials, getAvatarColor, formatCurrency, maskIdNumber, getOutstandingBalance } from '../lib/utils'
+import { getInitials, getAvatarColor, formatCurrency, maskIdNumber, getOutstandingBalance, calculateReducingBalanceLoan, STANDARD_LOAN_TERMS } from '../lib/utils'
+import { getMemberSavingsRecord } from '../lib/memberSavings'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { LoanTable } from '../components/loans/LoanTable'
 import { NewLoanModal } from '../components/loans/NewLoanModal'
@@ -43,6 +44,25 @@ export default function UserDetail() {
   const totalBorrowed = loans.reduce((s, l) => s + Number(l.amount), 0)
   const totalPaid = loans.reduce((s, l) => s + Number(l.amount_paid), 0)
   const totalOutstanding = loans.reduce((s, l) => s + getOutstandingBalance(l), 0)
+  const referenceLoan = loans.find((loan) => loan.status === 'Active' || loan.status === 'Overdue') ?? loans[0] ?? null
+  const savingsRecord = getMemberSavingsRecord(user)
+  const savingsBalance = Number(savingsRecord?.totalSavings ?? 0)
+  const loanCalculation = referenceLoan
+    ? calculateReducingBalanceLoan(referenceLoan.amount, referenceLoan.amount_paid, referenceLoan.interest_rate)
+    : null
+
+  const depositRows = [
+    {
+      label: 'Savings',
+      amount: savingsBalance,
+      description: savingsBalance > 0 ? 'Imported from savings register' : 'No matched savings record yet',
+    },
+    {
+      label: 'Loan Repayment',
+      amount: totalPaid,
+      description: totalPaid > 0 ? 'Captured from recorded loan payments' : 'No loan repayment deposits recorded yet',
+    },
+  ]
 
   async function handleDeleteUser() {
     await deleteUser(id)
@@ -57,7 +77,7 @@ export default function UserDetail() {
 
   return (
     <PageWrapper>
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -107,6 +127,112 @@ export default function UserDetail() {
                 </div>
               </div>
 
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 mb-6">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Savings Details</h3>
+                <div className="flex flex-col gap-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-muted">
+                      <BadgeCheck size={14} className="shrink-0 text-success" />
+                      <span>Registration Fee</span>
+                    </div>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      Paid
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-muted">
+                      <PiggyBank size={14} className="shrink-0" />
+                      <span>Savings Account</span>
+                    </div>
+                    <span className="font-mono text-text font-semibold">{formatCurrency(savingsBalance)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-white border border-slate-100 p-4 mb-6">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Deposits</h3>
+                <div className="flex flex-col gap-3">
+                  {depositRows.map((row) => (
+                    <div key={row.label} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3">
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <div className="flex items-center gap-2 text-sm font-medium text-text">
+                          <Wallet size={14} className="text-accent shrink-0" />
+                          <span>{row.label}</span>
+                        </div>
+                        <span className="font-mono text-sm font-semibold text-text">{formatCurrency(row.amount)}</span>
+                      </div>
+                      <p className="text-xs text-muted">{row.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-white border border-slate-100 p-4 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calculator size={14} className="text-accent shrink-0" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Loan Calculations</h3>
+                </div>
+
+                {loanCalculation ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Interest Method</p>
+                        <p className="text-sm font-semibold text-text">{referenceLoan?.interest_rate ?? 1}% Reducing Balance</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Repayment Period</p>
+                        <p className="text-sm font-semibold text-text">{STANDARD_LOAN_TERMS.repaymentMonths} months</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Loan Principal</span>
+                        <span className="font-mono font-semibold text-text">{formatCurrency(loanCalculation.principal)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Processing Fee (2%)</span>
+                        <span className="font-mono font-semibold text-danger">{formatCurrency(loanCalculation.processingFee)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Insurance Fee (1%)</span>
+                        <span className="font-mono font-semibold text-danger">{formatCurrency(loanCalculation.insuranceFee)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Ledger Book</span>
+                        <span className="font-mono font-semibold text-danger">{formatCurrency(loanCalculation.ledgerFee)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200">
+                        <span className="text-text font-medium">Net Disbursement</span>
+                        <span className="font-mono font-bold text-accent">{formatCurrency(loanCalculation.netDisbursement)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Total Interest Over 6 Months</span>
+                        <span className="font-mono font-semibold text-text">{formatCurrency(loanCalculation.totalInterest)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Total Repayable</span>
+                        <span className="font-mono font-semibold text-text">{formatCurrency(loanCalculation.totalRepayable)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted">Estimated Monthly Installment</span>
+                        <span className="font-mono font-semibold text-text">{formatCurrency(loanCalculation.estimatedMonthlyInstallment)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted">Estimated Outstanding</span>
+                        <span className="font-mono font-bold text-danger">{formatCurrency(loanCalculation.estimatedOutstanding)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">Create a loan for this member to see the reducing-balance calculation.</p>
+                )}
+              </div>
+
               {/* Actions */}
               <div className="flex flex-col gap-2 mb-6">
                 <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)} className="w-full justify-center gap-2">
@@ -151,7 +277,7 @@ export default function UserDetail() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </Motion.div>
 
       {/* Modals */}
       <EditUserModal open={editOpen} onClose={() => setEditOpen(false)} user={user} />

@@ -1,5 +1,13 @@
 import { format, isPast, differenceInDays, parseISO } from 'date-fns'
 
+export const STANDARD_LOAN_TERMS = {
+  monthlyInterestRate: 0.01,
+  repaymentMonths: 6,
+  processingFeeRate: 0.02,
+  insuranceFeeRate: 0.01,
+  ledgerFee: 100,
+}
+
 export function formatCurrency(amount) {
   if (amount == null || isNaN(amount)) return 'KES 0.00'
   return `KES ${Number(amount).toLocaleString('en-KE', {
@@ -42,6 +50,51 @@ export function getOutstandingBalance(loan) {
   if (!loan) return 0
   const { amount = 0, interest_rate = 0, amount_paid = 0 } = loan
   return Number(amount) + Number(amount) * (Number(interest_rate) / 100) - Number(amount_paid)
+}
+
+export function calculateReducingBalanceLoan(amount, amountPaid = 0, interestRatePercent = 1, terms = STANDARD_LOAN_TERMS) {
+  const principal = Number(amount) || 0
+  const paid = Number(amountPaid) || 0
+  const monthlyRate = Number(interestRatePercent) / 100
+  const repaymentMonths = terms.repaymentMonths
+
+  const processingFee = principal * terms.processingFeeRate
+  const insuranceFee = principal * terms.insuranceFeeRate
+  const ledgerFee = terms.ledgerFee
+  const totalDeductions = processingFee + insuranceFee + ledgerFee
+  const netDisbursement = principal - totalDeductions
+  const monthlyPrincipal = repaymentMonths > 0 ? principal / repaymentMonths : 0
+
+  let remainingBalance = principal
+  let totalInterest = 0
+
+  for (let month = 0; month < repaymentMonths; month += 1) {
+    const monthInterest = remainingBalance * monthlyRate
+    totalInterest += monthInterest
+    remainingBalance = Math.max(remainingBalance - monthlyPrincipal, 0)
+  }
+
+  const totalRepayable = principal + totalInterest
+  const estimatedMonthlyInstallment = repaymentMonths > 0
+    ? totalRepayable / repaymentMonths
+    : totalRepayable
+  const estimatedOutstanding = Math.max(totalRepayable - paid, 0)
+
+  return {
+    principal,
+    monthlyRate,
+    repaymentMonths,
+    processingFee,
+    insuranceFee,
+    ledgerFee,
+    totalDeductions,
+    netDisbursement,
+    monthlyPrincipal,
+    totalInterest,
+    totalRepayable,
+    estimatedMonthlyInstallment,
+    estimatedOutstanding,
+  }
 }
 
 export function generateLoanNumber(count) {

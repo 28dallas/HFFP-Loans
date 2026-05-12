@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 
 export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' }) {
@@ -14,7 +14,7 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' })
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -22,7 +22,7 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' })
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -39,7 +39,7 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' })
               </button>
             </div>
             <div className="px-6 py-5">{children}</div>
-          </motion.div>
+          </Motion.div>
         </div>
       )}
     </AnimatePresence>

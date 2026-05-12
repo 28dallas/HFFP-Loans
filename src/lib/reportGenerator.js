@@ -1,7 +1,26 @@
 import { formatDate, formatCurrency, getOutstandingBalance } from './utils'
 import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
 import { showToast } from './toast'
+
+function sanitizeFilename(filename) {
+  return Array.from(filename, (char) => {
+    const code = char.charCodeAt(0)
+    if (code < 32 || '<>:"/\\|?*'.includes(char)) return '-'
+    return char
+  }).join('')
+}
+
+function createDetachedDocument(html) {
+  const wrapper = document.createElement('div')
+  wrapper.style.position = 'fixed'
+  wrapper.style.left = '-9999px'
+  wrapper.style.top = '0'
+  wrapper.style.width = '210mm'
+  wrapper.style.backgroundColor = '#ffffff'
+  wrapper.innerHTML = html
+  document.body.appendChild(wrapper)
+  return wrapper
+}
 
 /**
  * Generate a professional member CVC (Certificate of Verification/Credit)
@@ -12,8 +31,6 @@ export function generateMemberCVC(user, loans) {
   const totalOutstanding = loans.reduce((s, l) => s + getOutstandingBalance(l), 0)
 
   const activeLoanCount = loans.filter(l => l.status === 'Active' || l.status === 'Overdue').length
-  const paidLoanCount = loans.filter(l => l.status === 'Paid').length
-
   const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -647,11 +664,6 @@ export function generateSystemReport(users, loans) {
     { Active: 0, Overdue: 0, Paid: 0 }
   )
 
-  const usersById = users.reduce((acc, user) => {
-    acc[user.id] = user
-    return acc
-  }, {})
-
   const userSummaries = users.map((user) => {
     const userLoans = loans.filter((loan) => loan.user_id === user.id)
     const borrowed = userLoans.reduce((sum, loan) => sum + Number(loan.amount), 0)
@@ -962,58 +974,69 @@ export function generateSystemReport(users, loans) {
  * Download HTML content as PDF/Document
  */
 export async function downloadPDF(html, filename) {
-  const wrapper = document.createElement('div')
-  wrapper.style.position = 'fixed'
-  wrapper.style.left = '-9999px'
-  wrapper.style.top = '0'
-  wrapper.style.width = '210mm'
-  wrapper.style.backgroundColor = '#ffffff'
-  wrapper.innerHTML = html
-  document.body.appendChild(wrapper)
-
-  const canvas = await html2canvas(wrapper, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: '#ffffff',
-  })
-
+  const safeFilename = sanitizeFilename(filename)
+  const wrapper = createDetachedDocument(html)
   const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
-  await pdf.html(wrapper, {
-    callback: (doc) => {
-      doc.save(filename)
-      showToast(`PDF downloaded: ${filename}`)
-      document.body.removeChild(wrapper)
-    },
-    x: 10,
-    y: 10,
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-    },
-  })
+
+  try {
+    await pdf.html(wrapper, {
+      callback: (doc) => {
+        doc.save(safeFilename)
+      },
+      x: 10,
+      y: 10,
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      },
+    })
+    showToast(`PDF downloaded: ${safeFilename}`)
+  } catch (error) {
+    console.error('PDF download failed', error)
+    showToast('PDF download failed. Please try again.')
+  } finally {
+    document.body.removeChild(wrapper)
+  }
 }
 
 export function downloadDocument(html, filename) {
+  const safeFilename = sanitizeFilename(filename)
   const blob = new Blob([html], { type: 'text/html' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = filename
+  link.download = safeFilename
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
-  showToast(`Document downloaded: ${filename}`)
+  showToast(`Document downloaded: ${safeFilename}`)
 }
 
 /**
  * Open document in print preview
  */
 export function printDocument(html) {
-  const printWindow = window.open('', '_blank')
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+
+  if (!printWindow) {
+    showToast('Print preview was blocked by the browser. Allow pop-ups and try again.')
+    return
+  }
+
+  printWindow.document.open()
   printWindow.document.write(html)
   printWindow.document.close()
-  printWindow.focus()
-  setTimeout(() => printWindow.print(), 500)
+
+  const triggerPrint = () => {
+    printWindow.focus()
+    printWindow.print()
+  }
+
+  if (printWindow.document.readyState === 'complete') {
+    setTimeout(triggerPrint, 150)
+  } else {
+    printWindow.addEventListener('load', () => setTimeout(triggerPrint, 150), { once: true })
+  }
 }

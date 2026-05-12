@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Users, Banknote, Percent, CalendarDays, Plus, Search } from 'lucide-react'
 import { useUsers, useDashboardStats } from '../hooks/useUsers'
 import { useLoans } from '../hooks/useLoans'
@@ -11,6 +11,21 @@ import { PageSpinner } from '../components/ui/Spinner'
 import { SystemReportActions } from '../components/ui/SystemReportActions'
 
 const FILTERS = ['All', 'Active', 'Overdue', 'Paid']
+
+function compareMembers(a, b, loanSummaryMap) {
+  const aOutstanding = loanSummaryMap[a.id]?.outstanding ?? 0
+  const bOutstanding = loanSummaryMap[b.id]?.outstanding ?? 0
+  const aShares = Number(a.total_shares ?? 0)
+  const bShares = Number(b.total_shares ?? 0)
+
+  const aPriority = aShares > 0 && aOutstanding > 0 ? 1 : 0
+  const bPriority = bShares > 0 && bOutstanding > 0 ? 1 : 0
+
+  if (aPriority !== bPriority) return bPriority - aPriority
+  if (aOutstanding !== bOutstanding) return bOutstanding - aOutstanding
+  if (aShares !== bShares) return bShares - aShares
+  return a.full_name.localeCompare(b.full_name)
+}
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
@@ -37,10 +52,15 @@ export default function Dashboard() {
   const { data: stats } = useDashboardStats()
 
   // Debounce search
-  useMemo(() => {
+  useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 300)
     return () => clearTimeout(t)
   }, [search])
+
+  const totalInterestCharges = useMemo(
+    () => loans.reduce((sum, loan) => sum + Number(loan.amount || 0) * (Number(loan.interest_rate || 0) / 100), 0),
+    [loans]
+  )
 
   // Build per-user loan summary
   const loanSummaryMap = useMemo(() => {
@@ -73,7 +93,7 @@ export default function Dashboard() {
       })
     }
 
-    return result
+    return [...result].sort((a, b) => compareMembers(a, b, loanSummaryMap))
   }, [users, debounced, filter, loanSummaryMap])
 
   return (
@@ -83,25 +103,25 @@ export default function Dashboard() {
         <StatCard
           icon={Users}
           label="Total Members"
-          value={24}
+          value={stats?.total_members ?? users.length}
           color="bg-primary"
         />
         <StatCard
           icon={Banknote}
           label="Total Disbursed"
-          value="KES 256,500.00"
+          value={formatCurrency(stats?.total_disbursed)}
           color="bg-accent"
         />
         <StatCard
           icon={Percent}
           label="Interest Charges"
-          value="KES 9,040.00"
+          value={formatCurrency(totalInterestCharges)}
           color="bg-danger"
         />
         <StatCard
           icon={CalendarDays}
-          label="Monthly"
-          value="KES 247,205.00"
+          label="Outstanding Balance"
+          value={formatCurrency(stats?.total_outstanding)}
           color="bg-success"
         />
       </div>
