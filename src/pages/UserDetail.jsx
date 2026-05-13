@@ -175,6 +175,29 @@ export default function UserDetail() {
 
                 {loanCalculation ? (
                   <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Loan Application Amount</p>
+                        <p className="text-sm font-semibold text-text">{formatCurrency(loanCalculation.principal)}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Interest Charges</p>
+                        <p className="text-sm font-semibold text-text">{formatCurrency(loanCalculation.totalInterest)}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Total Amount To Repay</p>
+                        <p className="text-sm font-semibold text-text">{formatCurrency(loanCalculation.totalRepayable)}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Total Amount To Receive</p>
+                        <p className="text-sm font-semibold text-text">{formatCurrency(loanCalculation.netDisbursement)}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3 md:col-span-2">
+                        <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Monthly Payment</p>
+                        <p className="text-sm font-semibold text-text">{formatCurrency(loanCalculation.estimatedMonthlyInstallment)}</p>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
                         <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Interest Method</p>

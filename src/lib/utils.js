@@ -49,7 +49,8 @@ export function getDaysOverdue(dueDate) {
 export function getOutstandingBalance(loan) {
   if (!loan) return 0
   const { amount = 0, interest_rate = 0, amount_paid = 0 } = loan
-  return Number(amount) + Number(amount) * (Number(interest_rate) / 100) - Number(amount_paid)
+  const calculation = calculateReducingBalanceLoan(amount, amount_paid, interest_rate)
+  return calculation.estimatedOutstanding
 }
 
 export function calculateReducingBalanceLoan(amount, amountPaid = 0, interestRatePercent = 1, terms = STANDARD_LOAN_TERMS) {

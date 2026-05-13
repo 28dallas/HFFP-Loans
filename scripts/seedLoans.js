@@ -48,14 +48,14 @@ const userMap = Object.fromEntries(users.map((u) => [u.unique_no, u.id]))
 
 const loans = loanData.map((l, i) => ({
   user_id: userMap[l.unique_no],
-  loan_number: `LN-2025-${String(i + 1).padStart(3, '0')}`,
+  loan_number: `LN-2026-${String(i + 1).padStart(3, '0')}`,
   amount: l.amount,
-  interest_rate: 10.00,
-  application_date: '2025-01-01',
-  due_date: '2025-12-31',
+  interest_rate: 1.00,
+  application_date: '2026-03-01',
+  due_date: '2026-08-31',
   status: 'Active',
   amount_paid: 0,
-  notes: 'Initial disbursement — Cycle One',
+  notes: 'March 2026 first batch disbursement',
 }))
 
 const missing = loans.filter((l) => !l.user_id)
