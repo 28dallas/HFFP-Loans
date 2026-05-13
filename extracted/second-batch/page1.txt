@@ -1,0 +1,42 @@
+HER FINANCIAL FREEDOM SAVINGS AND CREDIT AND CO-OPERATEB SOCIETY
+
+
+
+
+GROUP UNIQUE NO.              NAME              PHONE N0           ID NO       SHARES       Loan          Interest charges Total Amount     Total Amount
+                                                                                            application                    To Repaid        To Received
+                                                                                            amount -March                                                    Monthly
+                                                                                            2026                                                             payment
+    1 HFFPO25       CATHARINA C SAMUEL            707143073         20931800        5,000           15,000            530          15,530           14,450             2,588
+    2 HFFPO26       GLADYS ARUPE LOKERIS          715223188         34966786        5,000           12,000            420          12,420           11,540             2070
+    3 HFFPO27       CHEPOKENYEWA C LOKORIO        700419189          8367629        5,000           12,000            420          12,420           11540              2070
+    4 HFFPO28       MARY CHEBIATICH LORWAMA       729829730          8723317        5,000            9000             320           9,320            8630              1590
+    5 HFFPO29       MONICA LINGA                  726442061          8299774        5,000           19,500            690          20,190           18815              3365
+    6 HFFPO30       ESTHER C KILOLIT              707438552         12818295        5,000           15,000            530          15,530           14,450             2,588
+    7 HFFPO31       JOSHINA ASINEI KAMBI          790110918          9760282        5,000           19,500            690          20,190           18815              3365
+    8 HFFPO32       WINNIE CHEPKEMOI              710402721         35546655        5,000           15,000            530          15,530           14,450             2,588
+    9 HFFPO33       JANE CHEROP LOSIWARENG        716557275         31810343        5,000           15,000            530          15,530           14,450             2,588
+   10 HFFPO34       SELINA CHEMOIYO LORISO        713893691         21382601        5,000           18,000            640          18,635           17,360             3,107
+   11 HFFPO35       MERCY CHENANGAT               746436744         37956218        5,000           15,000            530          15,530           14,450             2,588
+   12 HFFPO36       MOURINE CHENANGAT             746648386         36722290        5,000           18,000            640          18,640           17,360             3,107
+   13 HFFPO37       ELIZA CHEPOCHEPOS JAMES       717842662         20397320        5,000           18,000            640          18,640           15905              2845
+   14 HFFPO38       SELINA CHEPOCHONYIR ROTICH 710255082            34966263        5,000           16,500            580          17,080           15905              2845
+   15 HFFPO39       LYDIA CHEPKENES MERKORI       795702721         29628909        5,000           16,500            580          17,080           15905              2845
+   16 HFFPO40       ALICE CHEPOSAIT TEPESO        795563192         29611705        5,000           16,500            580          17,080           15905              2845
+   17 HFFPO41       SELINA CHEPOSEPOI LOKINYAL 743804159             8367360        5,000           15,000            530          15,530           14,450             2,588
+   18 HFFPO42       REGINA CHEPOCHEWEW LORIONO
+                                             728975347              27779231        5,000           15,000            530          15,530           14,450             2,588
+   19 HFFPO43       GRACE CHEPINTANY KARENGAN719589451              27452472        5,000           15,000            530          15,530           14,450             2,588
+   20 HFFPO44       PAULINE NGURIARENG CHEPOCHEWEW
+                                             757407940              24257378        5,000           15,000            530          15,530           14,450             2,588
+   21 HFFPO45       SHAILAH CHEPOSEBOI KEDI       796765995         29611779        5,000           16,500            580          17,070           15335              2845
+   22 HFFPO46       TECLA CHEP0KWEGHO JAMES       792773156         30195959        5,000           15,000            530          15,530           14,450             2,588
+   23 HFFPO47       CAREN CHESANG LORISO          705851907         33856231        5,000           30,000           1060          31,846           29,000             5308
+   24 HFFPO48       RELIN CHEPOCHEWEW LORUMOSIA
+                                            799585270                4108753        5,000           16,500            580          17,080           15335              2845
+   26 HFFPO50       AGNETA TITIKA YUDHA           702793979         11712981        5,000           18,000            640          18,640           17,360             3,107
+   27 HFFPO51       SABINA C KOMOLE               715376443         24240937        5,000           18,000            640          18,640           17,360             3,107
+   28 HFFPO52       ROSALINE C FRANCIS            703683184         24238650        5,000           18,000            640          18,640           17,360             3,107
+   29 HFFPO53       LUCY PENDOW MARTIN            799276882          4094713        5,000           20,000            700          20,700           19300              3450
+   30 HFFPO54        CHEPOSEKER LONYAMGAT         707390047          9516169        5,000           30,000           1060          31,060           29,000             5,170
+
