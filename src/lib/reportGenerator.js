@@ -62,7 +62,7 @@ function buildExcelWorkbook(title, sections) {
       <head>
         <meta charset="UTF-8" />
         <style>
-          body { font-family: Arial, sans-serif; }
+          body { font-family: Calibri, Candara, 'Segoe UI', Arial, sans-serif; }
           h1 { color: #17365d; }
           h2 { margin-top: 24px; color: #17365d; }
           table { border-collapse: collapse; margin-bottom: 20px; }
@@ -102,7 +102,7 @@ export function generateMemberCVC(user, loans) {
           box-sizing: border-box;
         }
         body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: Calibri, Candara, 'Segoe UI', Arial, sans-serif;
           background: #f5f5f5;
           padding: 20px;
         }
@@ -133,7 +133,7 @@ export function generateMemberCVC(user, loans) {
           color: #94a3b8;
           font-size: 11px;
           margin-bottom: 30px;
-          font-family: 'Courier New', monospace;
+          font-family: Consolas, 'Courier New', monospace;
         }
         .section {
           margin-bottom: 35px;
@@ -200,7 +200,7 @@ export function generateMemberCVC(user, loans) {
           color: #1e293b;
           font-size: 16px;
           font-weight: 700;
-          font-family: 'Courier New', monospace;
+          font-family: Consolas, 'Courier New', monospace;
         }
         .stat-card.borrowed .stat-value {
           color: #0ea5e9;
@@ -416,7 +416,7 @@ export function generateMemberReport(user, loans) {
           box-sizing: border-box;
         }
         body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: Calibri, Candara, 'Segoe UI', Arial, sans-serif;
           background: #f5f5f5;
           padding: 20px;
           color: #1e293b;
@@ -530,7 +530,7 @@ export function generateMemberReport(user, loans) {
           color: #0c63e4;
           font-size: 15px;
           font-weight: 700;
-          font-family: 'Courier New', monospace;
+          font-family: Consolas, 'Courier New', monospace;
         }
         .loans-section {
           margin-bottom: 30px;
@@ -753,7 +753,7 @@ export function generateSystemReport(users, loans) {
           box-sizing: border-box;
         }
         body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: Calibri, Candara, 'Segoe UI', Arial, sans-serif;
           background: #f5f5f5;
           color: #1e293b;
           padding: 20px;

@@ -16,8 +16,8 @@ export default {
         muted: '#64748B',
       },
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        mono: ['DM Mono', 'monospace'],
+        sans: ['Calibri', 'Candara', 'Segoe UI', 'Arial', 'sans-serif'],
+        mono: ['Consolas', 'Courier New', 'monospace'],
       },
     },
   },
