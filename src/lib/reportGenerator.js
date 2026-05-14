@@ -1,4 +1,4 @@
-import { formatDate, formatCurrency, getOutstandingBalance } from './utils'
+import { formatDate, formatCurrency, getOutstandingBalance, getLoanCalculation } from './utils'
 import { jsPDF } from 'jspdf'
 import { showToast } from './toast'
 
@@ -20,6 +20,63 @@ function createDetachedDocument(html) {
   wrapper.innerHTML = html
   document.body.appendChild(wrapper)
   return wrapper
+}
+
+function escapeCell(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function moneyValue(value) {
+  return Number(value || 0).toFixed(2)
+}
+
+function rowsToTable(title, rows) {
+  if (!rows.length) {
+    return `<h2>${escapeCell(title)}</h2><p>No records.</p>`
+  }
+
+  const headers = Object.keys(rows[0])
+  return `
+    <h2>${escapeCell(title)}</h2>
+    <table>
+      <thead>
+        <tr>${headers.map((header) => `<th>${escapeCell(header)}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${rows.map((row) => `
+          <tr>${headers.map((header) => `<td>${escapeCell(row[header])}</td>`).join('')}</tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+function buildExcelWorkbook(title, sections) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <style>
+          body { font-family: Arial, sans-serif; }
+          h1 { color: #17365d; }
+          h2 { margin-top: 24px; color: #17365d; }
+          table { border-collapse: collapse; margin-bottom: 20px; }
+          th { background: #d9eaf7; font-weight: bold; }
+          th, td { border: 1px solid #9eb6ce; padding: 6px 8px; white-space: nowrap; }
+        </style>
+      </head>
+      <body>
+        <h1>${escapeCell(title)}</h1>
+        <p>Generated: ${escapeCell(new Date().toLocaleString())}</p>
+        ${sections.join('')}
+      </body>
+    </html>
+  `
 }
 
 /**
@@ -970,6 +1027,123 @@ export function generateSystemReport(users, loans) {
   return html
 }
 
+export function generateMemberExcel(user, loans) {
+  const totalBorrowed = loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0)
+  const totalPaid = loans.reduce((sum, loan) => sum + Number(loan.amount_paid || 0), 0)
+  const totalOutstanding = loans.reduce((sum, loan) => sum + getOutstandingBalance(loan, user.unique_no), 0)
+  const totalInterest = loans.reduce((sum, loan) => sum + getLoanCalculation(loan, user.unique_no).totalInterest, 0)
+
+  const memberRows = [
+    {
+      'Unique No.': user.unique_no,
+      'Full Name': user.full_name,
+      'Phone Number': user.phone_number,
+      'ID Number': user.id_number,
+      Ground: user.ground,
+      'Date of Birth': user.date_of_birth || '',
+      Nationality: user.nationality || '',
+      'Postal Address': user.postal_address || '',
+      Gender: user.gender || '',
+      'Marital Status': user.marital_status || '',
+      'Registration Fee': 'Paid',
+      'Shares Paid': moneyValue(user.total_shares),
+    },
+  ]
+
+  const summaryRows = [
+    {
+      'Total Borrowed': moneyValue(totalBorrowed),
+      'Interest Charges': moneyValue(totalInterest),
+      'Total Paid': moneyValue(totalPaid),
+      'Outstanding Balance': moneyValue(totalOutstanding),
+      'Loan Count': loans.length,
+    },
+  ]
+
+  const loanRows = loans.map((loan) => {
+    const calculation = getLoanCalculation(loan, user.unique_no)
+    return {
+      'Loan Number': loan.loan_number,
+      Amount: moneyValue(loan.amount),
+      'Interest Charges': moneyValue(calculation.totalInterest),
+      'Total To Repay': moneyValue(calculation.totalRepayable),
+      'Total To Receive': moneyValue(calculation.netDisbursement),
+      'Monthly Payment': moneyValue(calculation.estimatedMonthlyInstallment),
+      'Amount Paid': moneyValue(loan.amount_paid),
+      Outstanding: moneyValue(getOutstandingBalance(loan, user.unique_no)),
+      Status: loan.status,
+      'Application Date': loan.application_date,
+      'Due Date': loan.due_date,
+    }
+  })
+
+  return buildExcelWorkbook(`${user.full_name} Member Report`, [
+    rowsToTable('Member Details', memberRows),
+    rowsToTable('Financial Summary', summaryRows),
+    rowsToTable('Loan History', loanRows),
+  ])
+}
+
+export function generateSystemExcel(users, loans) {
+  const totalShares = users.reduce((sum, user) => sum + Number(user.total_shares || 0), 0)
+  const totalDisbursed = loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0)
+  const totalPaid = loans.reduce((sum, loan) => sum + Number(loan.amount_paid || 0), 0)
+  const totalOutstanding = loans.reduce((sum, loan) => sum + getOutstandingBalance(loan), 0)
+  const totalInterest = loans.reduce((sum, loan) => sum + getLoanCalculation(loan).totalInterest, 0)
+
+  const summaryRows = [
+    {
+      'Total Members': users.length,
+      'Main Account / Shares': moneyValue(totalShares),
+      'Total Loans': loans.length,
+      'Total Disbursed': moneyValue(totalDisbursed),
+      'Interest Charges': moneyValue(totalInterest),
+      'Total Paid': moneyValue(totalPaid),
+      'Outstanding Balance': moneyValue(totalOutstanding),
+    },
+  ]
+
+  const memberRows = users.map((user) => ({
+    'Unique No.': user.unique_no,
+    'Full Name': user.full_name,
+    'Phone Number': user.phone_number,
+    'ID Number': user.id_number,
+    Ground: user.ground,
+    'Date of Birth': user.date_of_birth || '',
+    Nationality: user.nationality || '',
+    'Postal Address': user.postal_address || '',
+    Gender: user.gender || '',
+    'Marital Status': user.marital_status || '',
+    'Registration Fee': 'Paid',
+    'Shares Paid': moneyValue(user.total_shares),
+  }))
+
+  const loanRows = loans.map((loan) => {
+    const calculation = getLoanCalculation(loan)
+    return {
+      'Loan Number': loan.loan_number,
+      'Unique No.': loan.users?.unique_no || '',
+      'Member Name': loan.users?.full_name || '',
+      Amount: moneyValue(loan.amount),
+      'Interest Charges': moneyValue(calculation.totalInterest),
+      'Total To Repay': moneyValue(calculation.totalRepayable),
+      'Total To Receive': moneyValue(calculation.netDisbursement),
+      'Monthly Payment': moneyValue(calculation.estimatedMonthlyInstallment),
+      'Amount Paid': moneyValue(loan.amount_paid),
+      Outstanding: moneyValue(getOutstandingBalance(loan)),
+      Status: loan.status,
+      'Application Date': loan.application_date,
+      'Due Date': loan.due_date,
+    }
+  })
+
+  return buildExcelWorkbook('HFFP System Report', [
+    rowsToTable('System Summary', summaryRows),
+    rowsToTable('Members', memberRows),
+    rowsToTable('Loans', loanRows),
+  ])
+}
+
 /**
  * Download HTML content as PDF/Document
  */
@@ -1012,6 +1186,20 @@ export function downloadDocument(html, filename) {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
   showToast(`Document downloaded: ${safeFilename}`)
+}
+
+export function downloadExcel(workbookHtml, filename) {
+  const safeFilename = sanitizeFilename(filename)
+  const blob = new Blob([workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = safeFilename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+  showToast(`Excel document downloaded: ${safeFilename}`)
 }
 
 /**

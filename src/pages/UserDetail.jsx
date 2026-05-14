@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion as Motion } from 'framer-motion'
-import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus, BadgeCheck, PiggyBank, Wallet, Calculator } from 'lucide-react'
+import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus, BadgeCheck, PiggyBank, Wallet, Calculator, CalendarDays, Globe2, Mailbox, UserRound, Heart } from 'lucide-react'
 import { useUser, useDeleteUser } from '../hooks/useUsers'
 import { useUserLoans, useDeleteLoan } from '../hooks/useLoans'
-import { getInitials, getAvatarColor, formatCurrency, maskIdNumber, getOutstandingBalance, calculateReducingBalanceLoan, STANDARD_LOAN_TERMS } from '../lib/utils'
+import { getInitials, getAvatarColor, formatCurrency, formatDate, maskIdNumber, getOutstandingBalance, getLoanCalculation, STANDARD_LOAN_TERMS } from '../lib/utils'
 import { getMemberSavingsRecord } from '../lib/memberSavings'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { LoanTable } from '../components/loans/LoanTable'
@@ -43,13 +43,11 @@ export default function UserDetail() {
 
   const totalBorrowed = loans.reduce((s, l) => s + Number(l.amount), 0)
   const totalPaid = loans.reduce((s, l) => s + Number(l.amount_paid), 0)
-  const totalOutstanding = loans.reduce((s, l) => s + getOutstandingBalance(l), 0)
+  const totalOutstanding = loans.reduce((s, l) => s + getOutstandingBalance(l, user.unique_no), 0)
   const referenceLoan = loans.find((loan) => loan.status === 'Active' || loan.status === 'Overdue') ?? loans[0] ?? null
   const savingsRecord = getMemberSavingsRecord(user)
   const savingsBalance = Number(savingsRecord?.totalSavings ?? 0)
-  const loanCalculation = referenceLoan
-    ? calculateReducingBalanceLoan(referenceLoan.amount, referenceLoan.amount_paid, referenceLoan.interest_rate)
-    : null
+  const loanCalculation = referenceLoan ? getLoanCalculation(referenceLoan, user.unique_no) : null
 
   const depositRows = [
     {
@@ -120,6 +118,36 @@ export default function UserDetail() {
                   <MapPin size={14} className="shrink-0" />
                   <span>{user.ground}</span>
                 </div>
+                {user.date_of_birth && (
+                  <div className="flex items-center gap-2.5 text-muted">
+                    <CalendarDays size={14} className="shrink-0" />
+                    <span>{formatDate(user.date_of_birth)}</span>
+                  </div>
+                )}
+                {user.nationality && (
+                  <div className="flex items-center gap-2.5 text-muted">
+                    <Globe2 size={14} className="shrink-0" />
+                    <span>{user.nationality}</span>
+                  </div>
+                )}
+                {user.postal_address && (
+                  <div className="flex items-center gap-2.5 text-muted">
+                    <Mailbox size={14} className="shrink-0" />
+                    <span>{user.postal_address}</span>
+                  </div>
+                )}
+                {user.gender && (
+                  <div className="flex items-center gap-2.5 text-muted">
+                    <UserRound size={14} className="shrink-0" />
+                    <span>{user.gender}</span>
+                  </div>
+                )}
+                {user.marital_status && (
+                  <div className="flex items-center gap-2.5 text-muted">
+                    <Heart size={14} className="shrink-0" />
+                    <span>{user.marital_status}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2.5 text-muted">
                   <TrendingUp size={14} className="shrink-0" />
                   <span className="font-mono">{formatCurrency(user.total_shares)}</span>
@@ -201,7 +229,11 @@ export default function UserDetail() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
                         <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Interest Method</p>
-                        <p className="text-sm font-semibold text-text">{referenceLoan?.interest_rate ?? 1}% Reducing Balance</p>
+                        <p className="text-sm font-semibold text-text">
+                          {loanCalculation.source === 'batch-sheet'
+                            ? `${loanCalculation.batch} sheet`
+                            : `${referenceLoan?.interest_rate ?? 1}% Reducing Balance`}
+                        </p>
                       </div>
                       <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3">
                         <p className="text-[11px] uppercase tracking-wide text-muted mb-1">Repayment Period</p>
@@ -290,7 +322,7 @@ export default function UserDetail() {
             <div className="bg-white rounded-xl border border-slate-100 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-text">Loan History</h3>
-                <Button size="sm" onClick={() => setNewLoanOpen(true)}>
+                <Button size="sm" onClick={() => setNewLoanOpen(true)} disabled={Number(user.total_shares || 0) <= 0}>
                   <Plus size={13} /> New Loan
                 </Button>
               </div>

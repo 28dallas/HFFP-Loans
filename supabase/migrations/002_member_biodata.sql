@@ -1,0 +1,6 @@
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+  ADD COLUMN IF NOT EXISTS nationality TEXT,
+  ADD COLUMN IF NOT EXISTS postal_address TEXT,
+  ADD COLUMN IF NOT EXISTS gender TEXT,
+  ADD COLUMN IF NOT EXISTS marital_status TEXT;

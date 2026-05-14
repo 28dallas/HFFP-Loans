@@ -70,7 +70,7 @@ export function NewLoanModal({ open, onClose, userId }) {
           error={errors.interest_rate?.message}
           {...register('interest_rate')}
         />
-        <p className="text-xs text-muted">Default interest is 1% using reducing balance.</p>
+        <p className="text-xs text-muted">Default interest is 1% monthly on reducing balance over 6 months.</p>
         <Input
           label="Due Date"
           type="date"
@@ -96,6 +96,14 @@ export function NewLoanModal({ open, onClose, userId }) {
                 <p className="font-semibold">{formatCurrency(preview.principal)}</p>
               </div>
               <div>
+                <p className="text-muted">Interest Charges</p>
+                <p className="font-semibold">{formatCurrency(preview.totalInterest)}</p>
+              </div>
+              <div>
+                <p className="text-muted">Total To Repay</p>
+                <p className="font-semibold">{formatCurrency(preview.totalRepayable)}</p>
+              </div>
+              <div>
                 <p className="text-muted">Net Disbursement</p>
                 <p className="font-semibold text-accent">{formatCurrency(preview.netDisbursement)}</p>
               </div>
@@ -114,6 +122,10 @@ export function NewLoanModal({ open, onClose, userId }) {
               <div>
                 <p className="text-muted">Monthly Installment</p>
                 <p className="font-semibold">{formatCurrency(preview.estimatedMonthlyInstallment)}</p>
+              </div>
+              <div>
+                <p className="text-muted">Starting Balance</p>
+                <p className="font-semibold text-danger">{formatCurrency(preview.estimatedOutstanding)}</p>
               </div>
             </div>
           </div>

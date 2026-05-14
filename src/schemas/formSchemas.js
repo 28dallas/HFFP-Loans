@@ -13,6 +13,11 @@ export const addUserSchema = z.object({
     .optional()
     .transform((v) => (v ? parseFloat(v) : 0))
     .pipe(z.number().min(0, 'Shares cannot be negative')),
+  date_of_birth: z.string().optional(),
+  nationality: z.string().optional(),
+  postal_address: z.string().optional(),
+  gender: z.string().optional(),
+  marital_status: z.string().optional(),
 })
 
 export const editUserSchema = addUserSchema

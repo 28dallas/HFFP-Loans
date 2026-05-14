@@ -1,4 +1,5 @@
 import { format, isPast, differenceInDays, parseISO } from 'date-fns'
+import { getBatchLoanDetail } from '../data/batchLoanDetails'
 
 export const STANDARD_LOAN_TERMS = {
   monthlyInterestRate: 0.01,
@@ -46,11 +47,36 @@ export function getDaysOverdue(dueDate) {
   }
 }
 
-export function getOutstandingBalance(loan) {
+function getLoanUniqueNo(loan, fallbackUniqueNo) {
+  return fallbackUniqueNo || loan?.unique_no || loan?.users?.unique_no
+}
+
+export function getOutstandingBalance(loan, fallbackUniqueNo) {
   if (!loan) return 0
-  const { amount = 0, interest_rate = 0, amount_paid = 0 } = loan
-  const calculation = calculateReducingBalanceLoan(amount, amount_paid, interest_rate)
+  if (loan.status === 'Paid') return 0
+  const calculation = getLoanCalculation(loan, fallbackUniqueNo)
   return calculation.estimatedOutstanding
+}
+
+export function getLoanCalculation(loan, fallbackUniqueNo) {
+  const amount = Number(loan?.amount) || 0
+  const amountPaid = Number(loan?.amount_paid) || 0
+  const interestRate = Number(loan?.interest_rate) || 0
+  const baseCalculation = calculateReducingBalanceLoan(amount, amountPaid, interestRate)
+  const batchDetail = getBatchLoanDetail(getLoanUniqueNo(loan, fallbackUniqueNo), amount)
+
+  if (!batchDetail) return baseCalculation
+
+  return {
+    ...baseCalculation,
+    source: 'batch-sheet',
+    batch: batchDetail.batch,
+    totalInterest: batchDetail.interestCharges,
+    totalRepayable: batchDetail.totalRepayable,
+    netDisbursement: batchDetail.netDisbursement,
+    estimatedMonthlyInstallment: batchDetail.monthlyPayment,
+    estimatedOutstanding: Math.max(batchDetail.totalRepayable - amountPaid, 0),
+  }
 }
 
 export function calculateReducingBalanceLoan(amount, amountPaid = 0, interestRatePercent = 1, terms = STANDARD_LOAN_TERMS) {

@@ -1,7 +1,7 @@
 import { AlertCircle, Trash2 } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { formatCurrency, formatDate, getOutstandingBalance, isOverdue, getDaysOverdue } from '../../lib/utils'
+import { formatCurrency, formatDate, getOutstandingBalance, getLoanCalculation, isOverdue, getDaysOverdue } from '../../lib/utils'
 
 export function LoanTable({ loans, onDelete }) {
   if (!loans?.length) {
@@ -28,6 +28,7 @@ export function LoanTable({ loans, onDelete }) {
           {loans.map((loan) => {
             const overdue = isOverdue(loan.due_date, loan.status)
             const outstanding = getOutstandingBalance(loan)
+            const calculation = getLoanCalculation(loan)
             const daysOver = overdue ? getDaysOverdue(loan.due_date) : 0
 
             return (
@@ -58,7 +59,7 @@ export function LoanTable({ loans, onDelete }) {
                   )}
                 </td>
                 <td className="px-4 py-3 text-xs text-muted font-mono whitespace-nowrap">
-                  {loan.interest_rate}%
+                  {formatCurrency(calculation.totalInterest)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge status={loan.status} />

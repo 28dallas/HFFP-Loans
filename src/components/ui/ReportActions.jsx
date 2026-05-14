@@ -1,6 +1,6 @@
-import { FileText, Download, Printer } from 'lucide-react'
+import { FileText, Download, Printer, Table } from 'lucide-react'
 import { Button } from './Button'
-import { generateMemberCVC, generateMemberReport, downloadDocument, downloadPDF, printDocument } from '../../lib/reportGenerator'
+import { generateMemberCVC, generateMemberReport, generateMemberExcel, downloadDocument, downloadPDF, downloadExcel, printDocument } from '../../lib/reportGenerator'
 
 export function ReportActions({ user, loans, variant = 'default' }) {
   function handlePrintCVC() {
@@ -31,6 +31,11 @@ export function ReportActions({ user, loans, variant = 'default' }) {
   function handleDownloadReportPDF() {
     const html = generateMemberReport(user, loans)
     downloadPDF(html, `${user.full_name}-Report-${new Date().toISOString().split('T')[0]}.pdf`)
+  }
+
+  function handleDownloadExcel() {
+    const workbook = generateMemberExcel(user, loans)
+    downloadExcel(workbook, `${user.full_name}-Report-${new Date().toISOString().split('T')[0]}.xls`)
   }
 
   if (variant === 'compact') {
@@ -77,6 +82,13 @@ export function ReportActions({ user, loans, variant = 'default' }) {
         >
           <FileText size={13} />
           Download Report PDF
+        </button>
+        <button
+          onClick={handleDownloadExcel}
+          className="flex items-center gap-2 px-3 py-2 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition-colors"
+        >
+          <Table size={13} />
+          Download Excel
         </button>
       </div>
     )
@@ -137,6 +149,15 @@ export function ReportActions({ user, loans, variant = 'default' }) {
       >
         <FileText size={13} />
         Download Report PDF
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={handleDownloadExcel}
+        className="gap-2"
+      >
+        <Table size={13} />
+        Download Excel
       </Button>
     </div>
   )

@@ -23,9 +23,21 @@ async function fetchUser(id) {
 }
 
 async function createUser(payload) {
+  const { data: existingUsers, error: existingError } = await supabase
+    .from('users')
+    .select('unique_no')
+
+  if (existingError) throw existingError
+
+  const maxUniqueNumber = existingUsers.reduce((max, user) => {
+    const match = String(user.unique_no || '').match(/^HFFP(\d+)$/i)
+    if (!match) return max
+    return Math.max(max, Number(match[1]))
+  }, 0)
+
   const { data, error } = await supabase
     .from('users')
-    .insert([{ ...payload, unique_no: '' }])
+    .insert([{ ...payload, unique_no: `HFFP${String(maxUniqueNumber + 1).padStart(3, '0')}` }])
     .select()
     .single()
   if (error) throw error
@@ -67,6 +79,7 @@ export function useCreateUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
+      qc.invalidateQueries({ queryKey: ['loans'] })
     },
   })
 }
@@ -78,6 +91,7 @@ export function useUpdateUser() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['users', data.id] })
+      qc.invalidateQueries({ queryKey: ['loans'] })
     },
   })
 }
@@ -89,6 +103,7 @@ export function useDeleteUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
+      qc.invalidateQueries({ queryKey: ['loans'] })
     },
   })
 }

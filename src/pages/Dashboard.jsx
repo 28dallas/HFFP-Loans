@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Users, Banknote, Percent, CalendarDays, Plus, Search } from 'lucide-react'
-import { useUsers, useDashboardStats } from '../hooks/useUsers'
+import { Users, Banknote, Percent, CalendarDays, Plus, Search, Wallet } from 'lucide-react'
+import { useUsers } from '../hooks/useUsers'
 import { useLoans } from '../hooks/useLoans'
-import { getOutstandingBalance, formatCurrency } from '../lib/utils'
+import { getOutstandingBalance, getLoanCalculation, formatCurrency } from '../lib/utils'
 import { UserCard } from '../components/users/UserCard'
 import { AddUserModal } from '../components/users/AddUserModal'
 import { PageWrapper } from '../components/layout/PageWrapper'
@@ -49,7 +49,6 @@ export default function Dashboard() {
 
   const { data: users = [], isLoading: usersLoading } = useUsers()
   const { data: loans = [] } = useLoans()
-  const { data: stats } = useDashboardStats()
 
   // Debounce search
   useEffect(() => {
@@ -58,8 +57,18 @@ export default function Dashboard() {
   }, [search])
 
   const totalInterestCharges = useMemo(
-    () => loans.reduce((sum, loan) => sum + Number(loan.amount || 0) * (Number(loan.interest_rate || 0) / 100), 0),
+    () => loans.reduce((sum, loan) => sum + getLoanCalculation(loan).totalInterest, 0),
     [loans]
+  )
+
+  const totalDisbursed = useMemo(
+    () => loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0),
+    [loans]
+  )
+
+  const totalShares = useMemo(
+    () => users.reduce((sum, user) => sum + Number(user.total_shares || 0), 0),
+    [users]
   )
 
   // Build per-user loan summary
@@ -73,6 +82,11 @@ export default function Dashboard() {
     }
     return map
   }, [loans])
+
+  const totalOutstanding = useMemo(
+    () => Object.values(loanSummaryMap).reduce((sum, summary) => sum + summary.outstanding, 0),
+    [loanSummaryMap]
+  )
 
   const filtered = useMemo(() => {
     let result = users
@@ -99,17 +113,23 @@ export default function Dashboard() {
   return (
     <PageWrapper>
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
         <StatCard
           icon={Users}
           label="Total Members"
-          value={stats?.total_members ?? users.length}
+          value={users.length}
           color="bg-primary"
+        />
+        <StatCard
+          icon={Wallet}
+          label="Main Account"
+          value={formatCurrency(totalShares)}
+          color="bg-emerald-600"
         />
         <StatCard
           icon={Banknote}
           label="Total Disbursed"
-          value={formatCurrency(stats?.total_disbursed)}
+          value={formatCurrency(totalDisbursed)}
           color="bg-accent"
         />
         <StatCard
@@ -121,7 +141,7 @@ export default function Dashboard() {
         <StatCard
           icon={CalendarDays}
           label="Outstanding Balance"
-          value={formatCurrency(stats?.total_outstanding)}
+          value={formatCurrency(totalOutstanding)}
           color="bg-success"
         />
       </div>

@@ -1,6 +1,6 @@
-import { FileText, Download, Printer } from 'lucide-react'
+import { FileText, Download, Printer, Table } from 'lucide-react'
 import { Button } from './Button'
-import { generateSystemReport, downloadDocument, downloadPDF, printDocument } from '../../lib/reportGenerator'
+import { generateSystemReport, generateSystemExcel, downloadDocument, downloadPDF, downloadExcel, printDocument } from '../../lib/reportGenerator'
 
 export function SystemReportActions({ users = [], loans = [] }) {
   function handlePrintSystemReport() {
@@ -18,6 +18,11 @@ export function SystemReportActions({ users = [], loans = [] }) {
     downloadPDF(html, `HFFP-System-Report-${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
+  function handleDownloadSystemReportExcel() {
+    const workbook = generateSystemExcel(users, loans)
+    downloadExcel(workbook, `HFFP-System-Report-${new Date().toISOString().split('T')[0]}.xls`)
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       <Button variant="secondary" size="sm" onClick={handlePrintSystemReport} className="gap-2">
@@ -31,6 +36,10 @@ export function SystemReportActions({ users = [], loans = [] }) {
       <Button variant="secondary" size="sm" onClick={handleDownloadSystemReportPDF} className="gap-2">
         <FileText size={13} />
         Download PDF
+      </Button>
+      <Button variant="secondary" size="sm" onClick={handleDownloadSystemReportExcel} className="gap-2">
+        <Table size={13} />
+        Download Excel
       </Button>
     </div>
   )
