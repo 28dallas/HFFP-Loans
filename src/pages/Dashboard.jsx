@@ -128,7 +128,7 @@ export default function Dashboard() {
         />
         <StatCard
           icon={Banknote}
-          label="Total Disbursed"
+          label={`Total Disbursed (\${loans.length} loans)`}
           value={formatCurrency(totalDisbursed)}
           color="bg-accent"
         />

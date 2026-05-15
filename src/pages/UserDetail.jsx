@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion as Motion } from 'framer-motion'
-import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus, BadgeCheck, PiggyBank, Wallet, Calculator, CalendarDays, Globe2, Mailbox, UserRound, Heart } from 'lucide-react'
-import { useUser, useDeleteUser } from '../hooks/useUsers'
+import { ArrowLeft, Phone, MapPin, CreditCard, TrendingUp, Pencil, Trash2, Plus, BadgeCheck, PiggyBank, Calculator, CalendarDays, Globe2, Mailbox, UserRound, Heart } from 'lucide-react'
+import { useUser, useDeleteUser, useToggleUserActive } from '../hooks/useUsers'
 import { useUserLoans, useDeleteLoan } from '../hooks/useLoans'
+import { useUserSavings, useDeleteSaving } from '../hooks/useSavings'
 import { getInitials, getAvatarColor, formatCurrency, formatDate, maskIdNumber, getOutstandingBalance, getLoanCalculation, STANDARD_LOAN_TERMS } from '../lib/utils'
-import { getMemberSavingsRecord } from '../lib/memberSavings'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { LoanTable } from '../components/loans/LoanTable'
 import { NewLoanModal } from '../components/loans/NewLoanModal'
 import { EditUserModal } from '../components/users/EditUserModal'
+import { AddSavingsModal } from '../components/users/AddSavingsModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Button } from '../components/ui/Button'
 import { PageSpinner } from '../components/ui/Spinner'
@@ -30,13 +31,18 @@ export default function UserDetail() {
 
   const { data: user, isLoading: userLoading } = useUser(id)
   const { data: loans = [], isLoading: loansLoading } = useUserLoans(id)
+  const { data: savingsEntries = [] } = useUserSavings(id)
   const { mutateAsync: deleteUser, isPending: deletingUser } = useDeleteUser()
+  const { mutateAsync: toggleActive, isPending: togglingActive } = useToggleUserActive()
   const { mutateAsync: deleteLoan, isPending: deletingLoan } = useDeleteLoan()
+  const { mutateAsync: deleteSavingFn, isPending: deletingSaving } = useDeleteSaving(id)
 
   const [editOpen, setEditOpen] = useState(false)
   const [newLoanOpen, setNewLoanOpen] = useState(false)
+  const [addSavingsOpen, setAddSavingsOpen] = useState(false)
   const [deleteUserOpen, setDeleteUserOpen] = useState(false)
   const [deleteLoanTarget, setDeleteLoanTarget] = useState(null)
+  const [deleteSavingTarget, setDeleteSavingTarget] = useState(null)
 
   if (userLoading) return <PageWrapper><PageSpinner /></PageWrapper>
   if (!user) return <PageWrapper><p className="text-muted text-sm">Member not found.</p></PageWrapper>
@@ -45,22 +51,8 @@ export default function UserDetail() {
   const totalPaid = loans.reduce((s, l) => s + Number(l.amount_paid), 0)
   const totalOutstanding = loans.reduce((s, l) => s + getOutstandingBalance(l, user.unique_no), 0)
   const referenceLoan = loans.find((loan) => loan.status === 'Active' || loan.status === 'Overdue') ?? loans[0] ?? null
-  const savingsRecord = getMemberSavingsRecord(user)
-  const savingsBalance = Number(savingsRecord?.totalSavings ?? 0)
+  const savingsBalance = savingsEntries.reduce((s, e) => s + Number(e.amount), 0)
   const loanCalculation = referenceLoan ? getLoanCalculation(referenceLoan, user.unique_no) : null
-
-  const depositRows = [
-    {
-      label: 'Savings',
-      amount: savingsBalance,
-      description: savingsBalance > 0 ? 'Imported from savings register' : 'No matched savings record yet',
-    },
-    {
-      label: 'Loan Repayment',
-      amount: totalPaid,
-      description: totalPaid > 0 ? 'Captured from recorded loan payments' : 'No loan repayment deposits recorded yet',
-    },
-  ]
 
   async function handleDeleteUser() {
     await deleteUser(id)
@@ -71,6 +63,12 @@ export default function UserDetail() {
     if (!deleteLoanTarget) return
     await deleteLoan(deleteLoanTarget.id)
     setDeleteLoanTarget(null)
+  }
+
+  async function handleDeleteSaving() {
+    if (!deleteSavingTarget) return
+    await deleteSavingFn(deleteSavingTarget.id)
+    setDeleteSavingTarget(null)
   }
 
   return (
@@ -102,6 +100,11 @@ export default function UserDetail() {
                 </div>
                 <h2 className="text-base font-bold text-text">{user.full_name}</h2>
                 <p className="text-xs font-mono text-muted mt-0.5">{user.unique_no}</p>
+                {user.is_active === false && (
+                  <span className="mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    Suspended
+                  </span>
+                )}
               </div>
 
               {/* Details */}
@@ -177,22 +180,41 @@ export default function UserDetail() {
                 </div>
               </div>
 
+              {/* Live Savings Entries */}
               <div className="rounded-xl bg-white border border-slate-100 p-4 mb-6">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Deposits</h3>
-                <div className="flex flex-col gap-3">
-                  {depositRows.map((row) => (
-                    <div key={row.label} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3">
-                      <div className="flex items-center justify-between gap-3 mb-1.5">
-                        <div className="flex items-center gap-2 text-sm font-medium text-text">
-                          <Wallet size={14} className="text-accent shrink-0" />
-                          <span>{row.label}</span>
-                        </div>
-                        <span className="font-mono text-sm font-semibold text-text">{formatCurrency(row.amount)}</span>
-                      </div>
-                      <p className="text-xs text-muted">{row.description}</p>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Savings</h3>
+                  <button
+                    onClick={() => setAddSavingsOpen(true)}
+                    className="text-xs text-accent font-semibold hover:underline"
+                  >
+                    + Add
+                  </button>
                 </div>
+                {savingsEntries.length === 0 ? (
+                  <p className="text-xs text-muted">No savings recorded yet.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {savingsEntries.map((entry) => (
+                      <div key={entry.id} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-mono font-semibold text-text">{formatCurrency(entry.amount)}</p>
+                          <p className="text-[11px] text-muted">{entry.date}{entry.note ? ` — ${entry.note}` : ''}</p>
+                        </div>
+                        <button
+                          onClick={() => setDeleteSavingTarget(entry)}
+                          className="text-danger hover:opacity-70 transition-opacity"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                      <span className="text-xs text-muted font-medium">Total Savings</span>
+                      <span className="text-xs font-mono font-bold text-success">{formatCurrency(savingsBalance)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-xl bg-white border border-slate-100 p-4 mb-6">
@@ -293,6 +315,15 @@ export default function UserDetail() {
                 <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)} className="w-full justify-center gap-2">
                   <Pencil size={13} /> Edit Member
                 </Button>
+                <Button
+                  variant={user.is_active === false ? 'secondary' : 'ghost'}
+                  size="sm"
+                  loading={togglingActive}
+                  onClick={() => toggleActive({ id: user.id, is_active: user.is_active !== false ? false : true, full_name: user.full_name, unique_no: user.unique_no })}
+                  className={`w-full justify-center gap-2 ${user.is_active === false ? 'text-success border-success/40' : 'text-amber-600 hover:bg-amber-50'}`}
+                >
+                  {user.is_active === false ? '✓ Activate Member' : '⏸ Suspend Member'}
+                </Button>
                 <Button variant="danger" size="sm" onClick={() => setDeleteUserOpen(true)} className="w-full justify-center gap-2">
                   <Trash2 size={13} /> Delete Member
                 </Button>
@@ -327,7 +358,7 @@ export default function UserDetail() {
                 </Button>
               </div>
               {loansLoading ? <PageSpinner /> : (
-                <LoanTable loans={loans} onDelete={setDeleteLoanTarget} />
+                <LoanTable loans={loans} onDelete={setDeleteLoanTarget} userId={id} />
               )}
             </div>
           </div>
@@ -337,6 +368,7 @@ export default function UserDetail() {
       {/* Modals */}
       <EditUserModal open={editOpen} onClose={() => setEditOpen(false)} user={user} />
       <NewLoanModal open={newLoanOpen} onClose={() => setNewLoanOpen(false)} userId={id} />
+      <AddSavingsModal open={addSavingsOpen} onClose={() => setAddSavingsOpen(false)} userId={id} />
 
       <ConfirmDialog
         open={deleteUserOpen}
@@ -356,6 +388,16 @@ export default function UserDetail() {
         title="Delete Loan"
         description="This will permanently delete this loan record."
         confirmText={deleteLoanTarget?.loan_number ?? ''}
+      />
+
+      <ConfirmDialog
+        open={!!deleteSavingTarget}
+        onClose={() => setDeleteSavingTarget(null)}
+        onConfirm={handleDeleteSaving}
+        loading={deletingSaving}
+        title="Delete Savings Entry"
+        description="This will permanently remove this savings entry."
+        confirmText="delete"
       />
     </PageWrapper>
   )

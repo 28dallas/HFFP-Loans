@@ -1,10 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, LogOut, Landmark, X } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, Landmark, X, CreditCard, ShieldCheck, Settings2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/members', icon: Users, label: 'Members' },
+  { to: '/loans', icon: CreditCard, label: 'Loans' },
+  { to: '/audit', icon: ShieldCheck, label: 'Audit Log' },
+  { to: '/settings', icon: Settings2, label: 'Settings' },
 ]
 
 export function Sidebar({

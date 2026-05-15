@@ -194,6 +194,9 @@ export default function Members() {
                             <span className="font-medium text-text group-hover:text-accent transition-colors whitespace-nowrap">
                               {user.full_name}
                             </span>
+                            {user.is_active === false && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">Suspended</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3">

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { logAction } from '../lib/audit'
 
 const USERS_KEY = ['users']
 
@@ -26,7 +27,6 @@ async function createUser(payload) {
   const { data: existingUsers, error: existingError } = await supabase
     .from('users')
     .select('unique_no')
-
   if (existingError) throw existingError
 
   const maxUniqueNumber = existingUsers.reduce((max, user) => {
@@ -41,6 +41,7 @@ async function createUser(payload) {
     .select()
     .single()
   if (error) throw error
+  await logAction('CREATE Member', 'users', data.id, `Added ${data.full_name} (${data.unique_no})`)
   return data
 }
 
@@ -52,12 +53,31 @@ async function updateUser({ id, ...payload }) {
     .select()
     .single()
   if (error) throw error
+  await logAction('UPDATE Member', 'users', id, `Updated ${data.full_name} (${data.unique_no})`)
+  return data
+}
+
+async function toggleUserActive({ id, is_active, full_name, unique_no }) {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ is_active })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  await logAction(
+    is_active ? 'ACTIVATE Member' : 'SUSPEND Member',
+    'users', id,
+    `${is_active ? 'Activated' : 'Suspended'} ${full_name} (${unique_no})`
+  )
   return data
 }
 
 async function deleteUser(id) {
+  const { data } = await supabase.from('users').select('full_name, unique_no').eq('id', id).single()
   const { error } = await supabase.from('users').delete().eq('id', id)
   if (error) throw error
+  await logAction('DELETE Member', 'users', id, `Deleted ${data?.full_name} (${data?.unique_no})`)
 }
 
 export function useUsers() {
@@ -79,7 +99,7 @@ export function useCreateUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
-      qc.invalidateQueries({ queryKey: ['loans'] })
+      qc.invalidateQueries({ queryKey: ['audit_log'] })
     },
   })
 }
@@ -91,7 +111,19 @@ export function useUpdateUser() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['users', data.id] })
-      qc.invalidateQueries({ queryKey: ['loans'] })
+      qc.invalidateQueries({ queryKey: ['audit_log'] })
+    },
+  })
+}
+
+export function useToggleUserActive() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: toggleUserActive,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: USERS_KEY })
+      qc.invalidateQueries({ queryKey: ['users', data.id] })
+      qc.invalidateQueries({ queryKey: ['audit_log'] })
     },
   })
 }
@@ -103,7 +135,7 @@ export function useDeleteUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: USERS_KEY })
       qc.invalidateQueries({ queryKey: ['dashboard_stats'] })
-      qc.invalidateQueries({ queryKey: ['loans'] })
+      qc.invalidateQueries({ queryKey: ['audit_log'] })
     },
   })
 }

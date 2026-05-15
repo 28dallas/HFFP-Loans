@@ -1,5 +1,6 @@
 import { formatDate, formatCurrency, getOutstandingBalance, getLoanCalculation } from './utils'
 import { jsPDF } from 'jspdf'
+import * as XLSX from 'xlsx'
 import { showToast } from './toast'
 
 function sanitizeFilename(filename) {
@@ -1188,18 +1189,10 @@ export function downloadDocument(html, filename) {
   showToast(`Document downloaded: ${safeFilename}`)
 }
 
-export function downloadExcel(workbookHtml, filename) {
-  const safeFilename = sanitizeFilename(filename)
-  const blob = new Blob([workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = safeFilename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-  showToast(`Excel document downloaded: ${safeFilename}`)
+export function downloadExcel(workbook, filename) {
+  const safeFilename = sanitizeFilename(filename.replace(/\.xls$/, '.xlsx'))
+  XLSX.writeFile(workbook, safeFilename)
+  showToast(`Excel downloaded: ${safeFilename}`)
 }
 
 /**

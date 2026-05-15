@@ -6,6 +6,9 @@ import { supabase } from './lib/supabase'
 import Dashboard from './pages/Dashboard'
 import UserDetail from './pages/UserDetail'
 import Members from './pages/Members'
+import Loans from './pages/Loans'
+import AuditLog from './pages/AuditLog'
+import Settings from './pages/Settings'
 import Login from './pages/Login'
 import { PageSpinner } from './components/ui/Spinner'
 
@@ -36,30 +39,12 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <AuthGuard>
-                <Dashboard />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/members"
-            element={
-              <AuthGuard>
-                <Members />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/users/:id"
-            element={
-              <AuthGuard>
-                <UserDetail />
-              </AuthGuard>
-            }
-          />
+          <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
+          <Route path="/members" element={<AuthGuard><Members /></AuthGuard>} />
+          <Route path="/loans" element={<AuthGuard><Loans /></AuthGuard>} />
+          <Route path="/audit" element={<AuthGuard><AuditLog /></AuthGuard>} />
+          <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+          <Route path="/users/:id" element={<AuthGuard><UserDetail /></AuthGuard>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
