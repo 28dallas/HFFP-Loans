@@ -50,7 +50,6 @@ export default function Dashboard() {
   const { data: users = [], isLoading: usersLoading } = useUsers()
   const { data: loans = [] } = useLoans()
 
-  // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 300)
     return () => clearTimeout(t)
@@ -71,7 +70,6 @@ export default function Dashboard() {
     [users]
   )
 
-  // Build per-user loan summary
   const loanSummaryMap = useMemo(() => {
     const map = {}
     for (const loan of loans) {
@@ -81,6 +79,14 @@ export default function Dashboard() {
       if (loan.status === 'Active' || loan.status === 'Overdue') map[loan.user_id].activeCount++
     }
     return map
+  }, [loans])
+
+  const startedPayingCount = useMemo(() => {
+    const set = new Set()
+    for (const loan of loans) {
+      if (Number(loan.amount_paid || 0) > 0) set.add(loan.user_id)
+    }
+    return set.size
   }, [loans])
 
   const totalOutstanding = useMemo(
@@ -94,9 +100,7 @@ export default function Dashboard() {
     if (debounced) {
       const q = debounced.toLowerCase()
       result = result.filter(
-        (u) =>
-          u.full_name.toLowerCase().includes(q) ||
-          u.unique_no?.toLowerCase().includes(q)
+        (u) => u.full_name.toLowerCase().includes(q) || u.unique_no?.toLowerCase().includes(q)
       )
     }
 
@@ -113,37 +117,24 @@ export default function Dashboard() {
   return (
     <PageWrapper>
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-        <StatCard
-          icon={Users}
-          label="Total Members"
-          value={users.length}
-          color="bg-primary"
-        />
-        <StatCard
-          icon={Wallet}
-          label="Main Account"
-          value={formatCurrency(totalShares)}
-          color="bg-emerald-600"
-        />
-        <StatCard
-          icon={Banknote}
-          label={`Total Disbursed (\${loans.length} loans)`}
-          value={formatCurrency(totalDisbursed)}
-          color="bg-accent"
-        />
-        <StatCard
-          icon={Percent}
-          label="Interest Charges"
-          value={formatCurrency(totalInterestCharges)}
-          color="bg-danger"
-        />
-        <StatCard
-          icon={CalendarDays}
-          label="Outstanding Balance"
-          value={formatCurrency(totalOutstanding)}
-          color="bg-success"
-        />
+      <div className="flex flex-col gap-2 mb-6">
+        <div className="text-xs text-muted">
+          Started paying members:{' '}
+          <span className="font-mono font-semibold text-accent">{startedPayingCount}</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <StatCard icon={Users} label="Total Members" value={users.length} color="bg-primary" />
+          <StatCard icon={Wallet} label="Main Account" value={formatCurrency(totalShares)} color="bg-emerald-600" />
+          <StatCard
+            icon={Banknote}
+            label={`Total Disbursed (${loans.length} loans)`}
+            value={formatCurrency(totalDisbursed)}
+            color="bg-accent"
+          />
+          <StatCard icon={Percent} label="Interest Charges" value={formatCurrency(totalInterestCharges)} color="bg-danger" />
+          <StatCard icon={CalendarDays} label="Outstanding Balance" value={formatCurrency(totalOutstanding)} color="bg-success" />
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -154,15 +145,13 @@ export default function Dashboard() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150
-                ${filter === f
-                  ? 'bg-primary text-white'
-                  : 'bg-white border border-slate-200 text-muted hover:text-text hover:border-slate-300'
-                }`}
+                ${filter === f ? 'bg-primary text-white' : 'bg-white border border-slate-200 text-muted hover:text-text hover:border-slate-300'}`}
             >
               {f}
             </button>
           ))}
         </div>
+
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -174,10 +163,12 @@ export default function Dashboard() {
                 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
             />
           </div>
+
           <Button onClick={() => setAddOpen(true)} size="md">
             <Plus size={15} />
             Add Member
           </Button>
+
           <SystemReportActions users={users} loans={loans} />
         </div>
       </div>
@@ -192,11 +183,7 @@ export default function Dashboard() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              loanSummary={loanSummaryMap[user.id]}
-            />
+            <UserCard key={user.id} user={user} loanSummary={loanSummaryMap[user.id]} />
           ))}
         </div>
       )}
@@ -205,3 +192,4 @@ export default function Dashboard() {
     </PageWrapper>
   )
 }
+

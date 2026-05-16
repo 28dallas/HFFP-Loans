@@ -19,7 +19,7 @@ export function RecordRepaymentModal({ open, onClose, loan, userId }) {
   const { mutateAsync: createRepayment, isPending } = useCreateRepayment(loan?.id, userId)
   const { mutateAsync: deleteRepayment } = useDeleteRepayment(loan?.id, userId)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setError, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { date: new Date().toISOString().split('T')[0] },
   })
@@ -30,6 +30,10 @@ export function RecordRepaymentModal({ open, onClose, loan, userId }) {
   const outstanding = Math.max(totalRepayable - totalPaid, 0)
 
   async function onSubmit(data) {
+    if (data.amount > outstanding) {
+      setError('amount', { type: 'max', message: 'Amount cannot exceed outstanding balance' })
+      return
+    }
     await createRepayment({ loanId: loan.id, userId, ...data })
     reset()
   }
@@ -72,6 +76,7 @@ export function RecordRepaymentModal({ open, onClose, loan, userId }) {
                 type="number"
                 step="0.01"
                 min="0"
+                max={outstanding}
                 placeholder="0.00"
                 error={errors.amount?.message}
                 {...register('amount')}
@@ -109,7 +114,7 @@ export function RecordRepaymentModal({ open, onClose, loan, userId }) {
                     <p className="text-[11px] text-muted">{formatDate(r.date)}{r.note ? ` — ${r.note}` : ''}</p>
                   </div>
                   <button
-                    onClick={() => deleteRepayment(r.id)}
+                    onClick={() => deleteRepayment({ id: r.id, loanId: loan.id })}
                     className="text-danger hover:opacity-70 transition-opacity"
                   >
                     <Trash2 size={13} />

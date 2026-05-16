@@ -4,7 +4,8 @@ import { motion as Motion } from 'framer-motion'
 import { AlertCircle, Search } from 'lucide-react'
 import { useLoans } from '../hooks/useLoans'
 import { useUsers } from '../hooks/useUsers'
-import { formatCurrency, formatDate, getOutstandingBalance, getLoanCalculation, getDaysOverdue } from '../lib/utils'
+import { formatCurrency, formatDate, getOutstandingBalance, getDaysOverdue } from '../lib/utils'
+
 import { Badge } from '../components/ui/Badge'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { PageSpinner } from '../components/ui/Spinner'
@@ -115,8 +116,8 @@ export default function Loans() {
                   {filtered.map((loan) => {
                     const user = userMap[loan.user_id]
                     const outstanding = getOutstandingBalance(loan)
-                    const calc = getLoanCalculation(loan)
                     const daysOver = loan.status === 'Overdue' ? getDaysOverdue(loan.due_date) : 0
+
                     return (
                       <tr
                         key={loan.id}

@@ -339,15 +339,28 @@ export default function UserDetail() {
           {/* ── Right: Financial Overview ── */}
           <div className="lg:col-span-2 flex flex-col gap-5">
             {/* Stat Cards */}
-            <div className="grid grid-cols-3 gap-3">
-              <StatCard label="Total Borrowed" value={formatCurrency(totalBorrowed)} />
-              <StatCard label="Total Paid" value={formatCurrency(totalPaid)} color="text-success" />
-              <StatCard
-                label="Remaining Balance"
-                value={formatCurrency(totalOutstanding)}
-                color={totalOutstanding > 0 ? 'text-danger' : 'text-success'}
-              />
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs text-muted">
+                  Repaid:{' '}
+                  <span className="font-mono font-semibold text-success">{formatCurrency(totalPaid)}</span>
+                </p>
+                <p className="text-xs text-muted">
+                  Remaining:{' '}
+                  <span className={`font-mono font-semibold ${totalOutstanding > 0 ? 'text-danger' : 'text-success'}`}>{formatCurrency(totalOutstanding)}</span>
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <StatCard label="Total Borrowed" value={formatCurrency(totalBorrowed)} />
+                <StatCard label="Total Paid" value={formatCurrency(totalPaid)} color="text-success" />
+                <StatCard
+                  label="Remaining Balance"
+                  value={formatCurrency(totalOutstanding)}
+                  color={totalOutstanding > 0 ? 'text-danger' : 'text-success'}
+                />
+              </div>
             </div>
+
 
             {/* Loan History */}
             <div className="bg-white rounded-xl border border-slate-100 p-5">

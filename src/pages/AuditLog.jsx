@@ -4,8 +4,8 @@ import { Search, ShieldCheck } from 'lucide-react'
 import { useAuditLog } from '../hooks/useAuditLog'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { PageSpinner } from '../components/ui/Spinner'
-import { formatDate } from '../lib/utils'
 import { format, parseISO } from 'date-fns'
+
 
 const ACTION_COLORS = {
   CREATE: 'bg-emerald-50 text-emerald-700 border-emerald-200',

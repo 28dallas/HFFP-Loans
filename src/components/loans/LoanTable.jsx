@@ -53,6 +53,12 @@ export function LoanTable({ loans, onDelete, userId }) {
               const calculation = getLoanCalculation(loan)
               const daysOver = overdue ? getDaysOverdue(loan.due_date) : 0
 
+              const paymentNote = loan.amount_paid > 0
+                ? outstanding > 0
+                  ? `Repaid ${formatCurrency(loan.amount_paid)} · Remaining ${formatCurrency(outstanding)}`
+                  : `Repaid ${formatCurrency(loan.amount_paid)} and fully settled`
+                : null
+
               return (
                 <tr
                   key={loan.id}
@@ -93,6 +99,9 @@ export function LoanTable({ loans, onDelete, userId }) {
                     <span className={outstanding > 0 ? 'text-danger' : 'text-success'}>
                       {formatCurrency(outstanding)}
                     </span>
+                    {paymentNote && (
+                      <p className="text-[11px] text-muted mt-1">{paymentNote}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1">

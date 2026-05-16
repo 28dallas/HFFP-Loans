@@ -12,6 +12,32 @@ async function fetchLoanRepayments(loanId) {
   return data
 }
 
+async function syncLoanAmountPaid(loanId) {
+  const { data: loan, error: loanError } = await supabase
+    .from('loans')
+    .select('amount, interest_rate, status')
+    .eq('id', loanId)
+    .single()
+  if (loanError) throw loanError
+
+  const { data: repayments, error: repaymentError } = await supabase
+    .from('repayments')
+    .select('amount')
+    .eq('loan_id', loanId)
+  if (repaymentError) throw repaymentError
+
+  const amountPaid = repayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+  const totalRepayable = Number(loan.amount || 0) + (Number(loan.amount || 0) * Number(loan.interest_rate || 0) / 100)
+  const updatePayload = { amount_paid: amountPaid }
+  if (amountPaid >= totalRepayable) updatePayload.status = 'Paid'
+
+  const { error: updateError } = await supabase
+    .from('loans')
+    .update(updatePayload)
+    .eq('id', loanId)
+  if (updateError) throw updateError
+}
+
 async function createRepayment({ loanId, userId, amount, note, date }) {
   const { data, error } = await supabase
     .from('repayments')
@@ -20,13 +46,16 @@ async function createRepayment({ loanId, userId, amount, note, date }) {
     .single()
   if (error) throw error
   await logAction('CREATE Repayment', 'repayments', data.id, `KES ${amount} on ${date} for loan ${loanId}`)
+  await syncLoanAmountPaid(loanId)
   return data
 }
 
-async function deleteRepayment(id) {
+async function deleteRepayment({ id, loanId }) {
   const { error } = await supabase.from('repayments').delete().eq('id', id)
   if (error) throw error
   await logAction('DELETE Repayment', 'repayments', id, `Deleted repayment entry`)
+  await syncLoanAmountPaid(loanId)
+  return id
 }
 
 export function useLoanRepayments(loanId) {
